@@ -209,6 +209,30 @@ class ModifyConstantMutation(MutationOp):
             i += 1
 
 
+class JumpMutation(MutationOp):
+    _jump_table = {'JUMP_IF_TRUE': 'JUMP_IF_FALSE',
+                   'JUMP_IF_FALSE': 'JUMP_IF_TRUE'}
+
+    def mutants(self, function):
+        func = Function(function)
+        i = 0
+        while i < len(func.opcodes):
+            opcode = func.opcodes[i]
+
+            other_jump = self._jump_table.get(opcode.name)
+            if other_jump:
+                new_opcode = Opcode(dis.opmap[other_jump], opcode.lineno,
+                                    opcode.arg1, opcode.arg2)
+                func.opcodes[i] = new_opcode
+                yield (func.build(),
+                       "negated jump on line %d" % new_opcode.lineno)
+
+                # Reset opcode
+                func.opcodes[i] = opcode
+
+            # Next opcode
+            i += 1
+
 def _quiet_testmod(module):
     """
     Run all of a modules doctests, not producing any output to stdout.
@@ -230,7 +254,8 @@ def testmod(module):
         print "Un-mutated tests fail."
         return False
 
-    mutations = [ComparisonMutation(), ModifyConstantMutation()]
+    mutations = [ComparisonMutation(), ModifyConstantMutation(),
+                 JumpMutation()]
 
     fails = 0
     attempts = 0
