@@ -7,6 +7,7 @@ long_description = open('README.rst').read()
 setup(name='mutant',
       version=__version__,
       py_modules=['mutant'],
+      description="Mutation testing for Python",
       author="Michael Stephens",
       author_email="me@mikej.st",
       license="BSD",
